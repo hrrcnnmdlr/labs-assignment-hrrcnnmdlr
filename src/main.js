@@ -597,12 +597,10 @@ if (document.getElementById('searchForm')) {
 // --- Всі запити до тем, карток, профілю — тільки через window.queryGraphQL (GraphQL endpoint) ---
 // --- ГРАФОВИЙ ЗАПИТ (GraphQL) ---
 window.queryGraphQL = async function(query, variables = {}) {
-  // Для локального dev-режиму Netlify Dev не підтримує redirects, тому endpoint має бути /graphql
-  // Для продакшн Netlify працює /.netlify/functions/graphql через redirects
+  // Для production Netlify endpoint має бути /graphql
+  // Для локального dev-режиму Netlify Dev endpoint /.netlify/functions/graphql
   let url = '/graphql';
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    url = '/graphql';
-  } else {
     url = '/.netlify/functions/graphql';
   }
   const res = await fetch(url, {
