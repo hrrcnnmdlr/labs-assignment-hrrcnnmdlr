@@ -1,2 +1,7 @@
 [build]
 functions = "functions"
+
+[[redirects]]
+from = "/graphql"
+to = "/.netlify/functions/graphql"
+status = 200

@@ -1,5 +1,5 @@
 // main.js - логіка навігації та сторінок
-import { showMessage, setAuthUI, getToken, fetchWithAuth, loadProfile, showLogin, showRegister, logout } from './auth.js';
+import { showMessage, setAuthUI, getToken, loadProfile, showLogin, showRegister, logout } from './auth.js';
 import { fetchFlashcards, updateList, editCard, deleteCard, fetchTopics, addTopic, updateTopic } from './flashcards.js';
 
 window.showPage = function(page) {
@@ -87,14 +87,12 @@ if (addForm) {
     const answer = document.getElementById('answer').value.trim();
     const topicId = document.getElementById('topicSelect').value;
     if (!question || !answer || !topicId) return;
-    const res = await fetchWithAuth('/.netlify/functions/flashcards', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question, answer, topicId })
-    });
-    if (res.ok) {
+    const mutation = `mutation($question: String!, $answer: String!, $topicId: ID!) {\n  createFlashcard(question: $question, answer: $answer, topicId: $topicId) {\n    _id\n  }\n}`;
+    const res = await window.queryGraphQL(mutation, { question, answer, topicId });
+    if (res.data && res.data.createFlashcard && res.data.createFlashcard._id) {
       showMessage('Картку додано!', 'success');
       showPage('list');
+      fetchFlashcards();
     } else {
       showMessage('Помилка додавання картки', 'error');
     }
@@ -120,24 +118,29 @@ async function initTestPage() {
   document.getElementById('testStats').innerHTML = '';
 }
 
-let testCards = [], testIndex = 0, testScore = 0, testWrong = 0;
-
 if (document.getElementById('testTopicForm')) {
   document.getElementById('testTopicForm').onsubmit = async e => {
     e.preventDefault();
     const topicId = document.getElementById('testTopicSelect').value;
-    // Отримати картки по темі
-    const res = await fetchWithAuth('/.netlify/functions/flashcards');
-    const all = await res.json();
-    testCards = topicId === 'all' ? all : all.filter(c => c.topicId === topicId);
+    let query, variables;
+    if (topicId === 'all') {
+      query = `query {\n  flashcards(skip: 0, take: 100) {\n    _id\n    question\n    answer\n    topicId\n  }\n}`;
+      variables = {};
+    } else {
+      query = `query($topicId: ID) {\n  flashcards(topicId: $topicId, skip: 0, take: 100) {\n    _id\n    question\n    answer\n    topicId\n  }\n}`;
+      variables = { topicId };
+    }
+    const res = await window.queryGraphQL(query, variables);
+    let all = res.data && res.data.flashcards ? res.data.flashcards : [];
+    let testCards = all;
     if (!testCards.length) {
       document.getElementById('testBlock').style.display = 'none';
       document.getElementById('testStats').innerHTML = '<span style="color:red">Немає карток для цієї теми</span>';
       return;
     }
-    // Перемішати
     testCards = testCards.sort(() => Math.random() - 0.5);
-    testIndex = 0; testScore = 0; testWrong = 0;
+    window.testCards = testCards;
+    window.testIndex = 0; window.testScore = 0; window.testWrong = 0;
     showTestCard();
   };
 }
@@ -145,13 +148,13 @@ if (document.getElementById('testTopicForm')) {
 function showTestCard() {
   const block = document.getElementById('testBlock');
   fetchTopics().then(topics => {
-    const topic = topics.find(t => t._id === testCards[testIndex].topicId);
+    const topic = topics.find(t => t._id === window.testCards[window.testIndex].topicId);
     const color = topic && topic.color ? topic.color : '#e0eaff';
     block.innerHTML = `
       <div class="test-card" id="testCard" style="background:${color}">
         <div class="test-card-inner" id="testCardInner">
-          <div class="test-card-front" style="background:${color}"><strong>Q:</strong> ${testCards[testIndex].question}</div>
-          <div class="test-card-back"><strong>A:</strong> ${testCards[testIndex].answer}</div>
+          <div class="test-card-front" style="background:${color}"><strong>Q:</strong> ${window.testCards[window.testIndex].question}</div>
+          <div class="test-card-back"><strong>A:</strong> ${window.testCards[window.testIndex].answer}</div>
         </div>
       </div>
       <div id="testActions" style="display:none;">
@@ -166,11 +169,11 @@ function showTestCard() {
       document.getElementById('testActions').style.display = 'flex';
     };
     document.getElementById('testCorrectBtn').onclick = () => {
-      testScore++;
+      window.testScore++;
       nextTestCard();
     };
     document.getElementById('testWrongBtn').onclick = () => {
-      testWrong++;
+      window.testWrong++;
       nextTestCard();
     };
   });
@@ -178,10 +181,10 @@ function showTestCard() {
 }
 
 function nextTestCard() {
-  testIndex++;
-  if (testIndex >= testCards.length) {
-    const percent = Math.round((testScore / testCards.length) * 100);
-    document.getElementById('testBlock').innerHTML = `<div id="testStats"><b>Тест завершено!</b><br>Вірно: ${testScore} / ${testCards.length}<br>Невірно: ${testWrong}<br>Відсоток: ${percent}%</div>`;
+  window.testIndex++;
+  if (window.testIndex >= window.testCards.length) {
+    const percent = Math.round((window.testScore / window.testCards.length) * 100);
+    document.getElementById('testBlock').innerHTML = `<div id="testStats"><b>Тест завершено!</b><br>Вірно: ${window.testScore} / ${window.testCards.length}<br>Невірно: ${window.testWrong}<br>Відсоток: ${percent}%</div>`;
   } else {
     showTestCard();
   }
@@ -203,16 +206,7 @@ window.importFlashcards = async function() {
     const text = await file.text();
     let cards = [];
     if (file.name.endsWith('.json')) {
-      try {
-        const arr = JSON.parse(text);
-        if (Array.isArray(arr)) {
-          cards = arr.map(obj => ({
-            question: obj.q || obj.question,
-            answer: obj.a || obj.answer,
-            topic: obj.topic || ''
-          }));
-        }
-      } catch {}
+      try { cards = JSON.parse(text); } catch {}
     } else {
       // Текстовий формат: q: ...\na: ...\ntopic: ...\n---
       const blocks = text.split(/\n-{2,}\n/);
@@ -242,17 +236,14 @@ window.importFlashcards = async function() {
       }
     }
     const topicsNow = await fetchTopics();
-    // Додаємо картки
+    // Додаємо картки через GraphQL
     for (const card of cards) {
       const topicObj = topicsNow.find(t => t.name === card.topic) || topicsNow[0];
-      await fetchWithAuth('/.netlify/functions/flashcards', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          question: card.question,
-          answer: card.answer,
-          topicId: topicObj._id
-        })
+      const mutation = `mutation($question: String!, $answer: String!, $topicId: ID!) {\n  createFlashcard(question: $question, answer: $answer, topicId: $topicId) { _id }\n}`;
+      await window.queryGraphQL(mutation, {
+        question: card.question,
+        answer: card.answer,
+        topicId: topicObj._id
       });
     }
     showMessage('Картки імпортовано!', 'success');
@@ -429,11 +420,8 @@ window.showEditTopics = async function() {
     // Delete
     row.children[3].onclick = async () => {
       if (!confirm('Видалити тему?')) return;
-      await fetchWithAuth('/.netlify/functions/topics', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: t._id })
-      });
+      const mutation = `mutation($id: ID!) {\n  deleteTopic(id: $id)\n}`;
+      await window.queryGraphQL(mutation, { id: t._id });
       showMessage('Тему видалено!', 'success');
       await initTopicSelect();
       await window.showEditTopics();
@@ -451,6 +439,214 @@ if (!document.getElementById('editTopicsBtn')) {
   const navLeft = document.querySelector('.nav-left');
   if (navLeft) navLeft.appendChild(btn);
 }
+
+// --- СТОРІНКА ПОШУКУ ---
+if (!document.getElementById('page-search')) {
+  const page = document.createElement('div');
+  page.id = 'page-search';
+  page.className = 'page';
+  page.style.display = 'none';
+  page.innerHTML = `
+    <h2>Пошук</h2>
+    <form id="searchForm" style="display:flex;gap:10px;margin-bottom:18px;">
+      <input id="searchInput" placeholder="Введіть текст для пошуку..." style="flex:1;padding:10px;">
+      <select id="searchType" style="padding:10px;">
+        <option value="flashcards">Флешкартки</option>
+        <option value="topics">Теми</option>
+        <option value="flashcardsByTopic">Флешкартки за темою</option>
+      </select>
+      <button type="submit" id="searchSubmitBtn">Пошук</button>
+      <button type="button" id="searchBackBtn">Назад</button>
+    </form>
+    <div id="searchResults"></div>
+  `;
+  document.querySelector('.container').appendChild(page);
+}
+
+window.showSearchPage = function() {
+  document.querySelectorAll('.page').forEach(el => el.style.display = 'none');
+  document.getElementById('page-search').style.display = '';
+  document.getElementById('searchInput').focus();
+  document.getElementById('searchResults').innerHTML = '';
+};
+
+// Додаємо кнопку пошуку в навігацію
+// --- Кнопка пошуку у навігації ---
+if (!document.getElementById('searchBtn')) {
+  const btn = document.createElement('button');
+  btn.id = 'searchBtn';
+  btn.textContent = 'Пошук';
+  btn.className = 'nav-btn';
+  btn.onclick = () => window.showSearchPage();
+  const navLeft = document.querySelector('.nav-left');
+  if (navLeft) navLeft.appendChild(btn);
+}
+
+// --- Додаю єдиний клас для всіх кнопок у верхній навігації ---
+const navBtns = document.querySelectorAll('.nav-left button, #searchBtn, #editTopicsBtn');
+navBtns.forEach(btn => {
+  btn.classList.add('nav-btn');
+});
+
+// --- Логіка пошуку ---
+if (document.getElementById('searchForm')) {
+  document.getElementById('searchForm').onsubmit = async e => {
+    e.preventDefault();
+    const filter = document.getElementById('searchInput').value.trim();
+    const type = document.getElementById('searchType').value;
+    const resultsBlock = document.getElementById('searchResults');
+    resultsBlock.innerHTML = '<em>Пошук...</em>';
+    if (!filter) {
+      resultsBlock.innerHTML = '<span style="color:red">Введіть текст для пошуку</span>';
+      return;
+    }
+    if (type === 'flashcards') {
+      const query = `query($filter: String) {\n  flashcards(filter: $filter, skip: 0, take: 100) {\n    _id\n    question\n    answer\n    topicId\n  }\n}`;
+      const res = await window.queryGraphQL(query, { filter });
+      const cards = res.data && res.data.flashcards ? res.data.flashcards : [];
+      if (!cards.length) {
+        resultsBlock.innerHTML = '<em>Нічого не знайдено</em>';
+        return;
+      }
+      const topics = await fetchTopics();
+      let html = '';
+      for (const card of cards) {
+        const topic = topics.find(t => t._id === card.topicId);
+        html += `<div class=\"flashcard\"><div class=\"qa\"><strong>Q:</strong> <span>${card.question}</span><br><strong>A:</strong> <span>${card.answer}</span><br><span style='font-size:0.95em;color:#0077ff;'><b>Тема:</b> ${topic ? topic.name : ''}</span></div><div class=\"flashcard-actions\"><button class=\"edit-btn\" data-id=\"${card._id}\">✏️</button><button class=\"del-btn\" data-id=\"${card._id}\">🗑️</button></div></div>`;
+      }
+      resultsBlock.innerHTML = html;
+      // Додаємо обробники для кнопок редагування/видалення карток
+      resultsBlock.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.onclick = () => window.editCard(btn.dataset.id);
+      });
+      resultsBlock.querySelectorAll('.del-btn').forEach(btn => {
+        btn.onclick = () => window.deleteCard(btn.dataset.id);
+      });
+    } else if (type === 'topics') {
+      const query = `query($filter: String) {\n  topics(filter: $filter, skip: 0, take: 100) {\n    _id\n    name\n    color\n  }\n}`;
+      const res = await window.queryGraphQL(query, { filter });
+      const topics = res.data && res.data.topics ? res.data.topics : [];
+      if (!topics.length) {
+        resultsBlock.innerHTML = '<em>Нічого не знайдено</em>';
+        return;
+      }
+      let html = '';
+      for (const t of topics) {
+        html += `<div class=\"flashcard\" style=\"background:${t.color || '#e0eaff'}\"><div class=\"qa\"><strong>Тема:</strong> <span>${t.name}</span></div><div class=\"flashcard-actions\"><button class=\"edit-topic-btn\" data-id=\"${t._id}\">✏️</button><button class=\"del-topic-btn\" data-id=\"${t._id}\">🗑️</button></div></div>`;
+      }
+      resultsBlock.innerHTML = html;
+      // Обробники для тем
+      resultsBlock.querySelectorAll('.edit-topic-btn').forEach(btn => {
+        btn.onclick = async () => {
+          const topic = topics.find(t => t._id === btn.dataset.id);
+          if (topic) {
+            // Відкрити редактор теми (inline)
+            const div = btn.closest('.flashcard');
+            div.innerHTML = `<form class=\"topic-edit-form\"><input type=\"text\" value=\"${topic.name}\" style=\"padding:6px 8px; border-radius:6px; border:1px solid #0077ff44; min-width:120px;\"><input type=\"color\" value=\"${topic.color || '#e0eaff'}\" style=\"width:38px;height:28px;\"><button type=\"submit\">💾</button><button type=\"button\" class=\"cancel-edit-topic\">Скасувати</button></form>`;
+            const form = div.querySelector('.topic-edit-form');
+            form.onsubmit = async ev => {
+              ev.preventDefault();
+              const newName = form.querySelector('input[type=text]').value.trim();
+              const newColor = form.querySelector('input[type=color]').value;
+              if (!newName) return;
+              const ok = await updateTopic(topic._id, newName, newColor);
+              if (ok) showMessage('Тему оновлено!', 'success');
+              else showMessage('Помилка оновлення', 'error');
+              document.getElementById('searchForm').dispatchEvent(new Event('submit'));
+            };
+            form.querySelector('.cancel-edit-topic').onclick = () => document.getElementById('searchForm').dispatchEvent(new Event('submit'));
+          }
+        };
+      });
+      resultsBlock.querySelectorAll('.del-topic-btn').forEach(btn => {
+        btn.onclick = async () => {
+          if (!confirm('Видалити тему?')) return;
+          const mutation = `mutation($id: ID!) {\n  deleteTopic(id: $id)\n}`;
+          await window.queryGraphQL(mutation, { id: btn.dataset.id });
+          showMessage('Тему видалено!', 'success');
+          document.getElementById('searchForm').dispatchEvent(new Event('submit'));
+        };
+      });
+    } else if (type === 'flashcardsByTopic') {
+      const query = `query($topicName: String) {\n  flashcards(topicName: $topicName, skip: 0, take: 100) {\n    _id\n    question\n    answer\n    topicId\n  }\n}`;
+      const res = await window.queryGraphQL(query, { topicName: filter });
+      const cards = res.data && res.data.flashcards ? res.data.flashcards : [];
+      if (!cards.length) {
+        resultsBlock.innerHTML = '<em>Нічого не знайдено</em>';
+        return;
+      }
+      const topics = await fetchTopics();
+      let html = '';
+      for (const card of cards) {
+        const topic = topics.find(t => t._id === card.topicId);
+        html += `<div class=\"flashcard\"><div class=\"qa\"><strong>Q:</strong> <span>${card.question}</span><br><strong>A:</strong> <span>${card.answer}</span><br><span style='font-size:0.95em;color:#0077ff;'><b>Тема:</b> ${topic ? topic.name : ''}</span></div><div class=\"flashcard-actions\"><button class=\"edit-btn\" data-id=\"${card._id}\">✏️</button><button class=\"del-btn\" data-id=\"${card._id}\">🗑️</button></div></div>`;
+      }
+      resultsBlock.innerHTML = html;
+      // Додаємо обробники для кнопок редагування/видалення карток
+      resultsBlock.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.onclick = () => window.editCard(btn.dataset.id);
+      });
+      resultsBlock.querySelectorAll('.del-btn').forEach(btn => {
+        btn.onclick = () => window.deleteCard(btn.dataset.id);
+      });
+    }
+  };
+  document.getElementById('searchBackBtn').onclick = () => showPage('list');
+}
+
+// --- Всі запити до тем, карток, профілю — тільки через window.queryGraphQL (GraphQL endpoint) ---
+// --- ГРАФОВИЙ ЗАПИТ (GraphQL) ---
+window.queryGraphQL = async function(query, variables = {}) {
+  // Для локального dev-режиму Netlify Dev не підтримує redirects, тому endpoint має бути /graphql
+  // Для продакшн Netlify працює /.netlify/functions/graphql через redirects
+  let url = '/graphql';
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    url = '/graphql';
+  } else {
+    url = '/.netlify/functions/graphql';
+  }
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(getToken() ? { 'Authorization': 'Bearer ' + getToken() } : {})
+    },
+    body: JSON.stringify({ query, variables })
+  });
+  return res.json();
+};
+
+/*
+// --- UI для тесту GraphQL ---
+if (!document.getElementById('graphqlTestBlock')) {
+  const block = document.createElement('div');
+  block.id = 'graphqlTestBlock';
+  block.style.margin = '24px 0';
+  block.innerHTML = `
+    <details style="margin-bottom:12px;"><summary style="cursor:pointer;font-weight:600;">GraphQL запит (advanced)</summary>
+      <div style="margin:10px 0;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <input id="gqlFilter" placeholder="filter (наприклад: Математика)" style="padding:6px 10px;min-width:180px;">
+        <button id="gqlQueryBtn">Отримати картки</button>
+        <button id="gqlTopicsBtn">Отримати теми</button>
+      </div>
+      <pre id="gqlResult" style="background:#f8faff;padding:10px 12px;border-radius:8px;max-width:100%;overflow:auto;"></pre>
+    </details>
+  `;
+  document.querySelector('.container').appendChild(block);
+  document.getElementById('gqlQueryBtn').onclick = async () => {
+    const filter = document.getElementById('gqlFilter').value;
+    const query = `query($filter: String) {\n  flashcards(filter: $filter, skip: 0, take: 5) {\n    _id\n    question\n    answer\n  }\n}`;
+    const data = await window.queryGraphQL(query, { filter });
+    document.getElementById('gqlResult').textContent = JSON.stringify(data, null, 2);
+  };
+  document.getElementById('gqlTopicsBtn').onclick = async () => {
+    const filter = document.getElementById('gqlFilter').value;
+    const query = `query($filter: String) {\n  topics(filter: $filter, skip: 0, take: 5) {\n    _id\n    name\n    color\n  }\n}`;
+    const data = await window.queryGraphQL(query, { filter });
+    document.getElementById('gqlResult').textContent = JSON.stringify(data, null, 2);
+  };
+}
+*/
 
 // Експортуємо для глобального доступу
 window.logout = logout;

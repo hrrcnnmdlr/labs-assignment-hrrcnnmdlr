@@ -1,12 +1,12 @@
 // flashcards.js - CRUD для карток
-import { fetchWithAuth, showMessage } from './auth.js';
+import { showMessage } from './auth.js';
 
-export async function fetchFlashcards() {
+export async function fetchFlashcards(filter = '', skip = 0, take = 100) {
   try {
-    const res = await fetchWithAuth('/.netlify/functions/flashcards');
-    if (!res.ok) throw new Error('Помилка при завантаженні карток');
-    const data = await res.json();
-    updateList(Array.isArray(data) ? data : []);
+    const query = `query($filter: String, $skip: Int, $take: Int) {\n  flashcards(filter: $filter, skip: $skip, take: $take) {\n    _id\n    question\n    answer\n    topicId\n    createdAt\n    updatedAt\n  }\n}`;
+    const res = await window.queryGraphQL(query, { filter, skip, take });
+    const cards = res.data && res.data.flashcards ? res.data.flashcards : [];
+    updateList(cards);
   } catch (e) {
     document.getElementById('flashcards').innerHTML = '<span style="color:red">Не вдалося завантажити картки</span>';
   }
@@ -43,11 +43,15 @@ export function updateList(cards) {
 }
 
 export async function editCard(id) {
-  const res = await fetchWithAuth('/.netlify/functions/flashcards/' + id);
-  const card = await res.json();
-  // Отримати всі теми для select
-  const topics = await fetchTopics();
+  const query = `query($id: ID!) {\n  flashcard(id: $id) {\n    _id\n    question\n    answer\n    topicId\n  }\n  topics {\n    _id\n    name\n  }\n}`;
+  const res = await window.queryGraphQL(query, { id });
+  const card = res.data && res.data.flashcard ? res.data.flashcard : null;
+  const topics = res.data && res.data.topics ? res.data.topics : [];
   const editDiv = document.getElementById('page-edit');
+  if (!card) {
+    editDiv.innerHTML = '<span style="color:red">Картку не знайдено</span>';
+    return;
+  }
   editDiv.innerHTML = `
     <h2>Редагувати картку</h2>
     <form id="editForm">
@@ -63,50 +67,42 @@ export async function editCard(id) {
     </form>
   `;
   showPage('edit');
-  // Додаємо стилізацію для select (залишаємо як є, бо стилі вже додані в style.css)
   document.getElementById('editForm').onsubmit = async e => {
     e.preventDefault();
     const question = document.getElementById('editQ').value.trim();
     const answer = document.getElementById('editA').value.trim();
     const topicId = document.getElementById('editTopicSelect').value;
     if (!question || !answer || !topicId) return;
-    await fetchWithAuth('/.netlify/functions/flashcards/' + id, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question, answer, topicId })
-    });
+    const mutation = `mutation($id: ID!, $question: String!, $answer: String!, $topicId: ID!) {\n  updateFlashcard(id: $id, question: $question, answer: $answer, topicId: $topicId) {\n    _id\n  }\n}`;
+    await window.queryGraphQL(mutation, { id, question, answer, topicId });
     showPage('list');
+    fetchFlashcards();
   };
 }
 
 export async function deleteCard(id) {
   if (!confirm('Видалити цю картку?')) return;
-  await fetchWithAuth('/.netlify/functions/flashcards/' + id, { method: 'DELETE' });
+  const mutation = `mutation($id: ID!) {\n  deleteFlashcard(id: $id)\n}`;
+  await window.queryGraphQL(mutation, { id });
   showPage('list');
+  fetchFlashcards();
 }
 
-// --- Отримати всі теми користувача ---
-export async function fetchTopics() {
-  const res = await fetchWithAuth('/.netlify/functions/topics');
-  if (!res.ok) return [];
-  return await res.json();
+// --- Всі запити до тем і карток — тільки через window.queryGraphQL (GraphQL endpoint) ---
+export async function fetchTopics(filter = '', skip = 0, take = 100) {
+  const query = `query($filter: String, $skip: Int, $take: Int) {\n  topics(filter: $filter, skip: $skip, take: $take) {\n    _id\n    name\n    color\n  }\n}`;
+  const res = await window.queryGraphQL(query, { filter, skip, take });
+  return res.data && res.data.topics ? res.data.topics : [];
 }
 
-// --- Додати/редагувати тему з кольором ---
 export async function addTopic(name, color) {
-  const res = await fetchWithAuth('/.netlify/functions/topics', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, color })
-  });
-  return res.ok;
+  const mutation = `mutation($name: String!, $color: String) {\n  createTopic(name: $name, color: $color) {\n    _id\n  }\n}`;
+  const res = await window.queryGraphQL(mutation, { name, color });
+  return !!(res.data && res.data.createTopic && res.data.createTopic._id);
 }
 
 export async function updateTopic(id, name, color) {
-  const res = await fetchWithAuth('/.netlify/functions/topics', {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id, name, color })
-  });
-  return res.ok;
+  const mutation = `mutation($id: ID!, $name: String!, $color: String) {\n  updateTopic(id: $id, name: $name, color: $color) {\n    _id\n  }\n}`;
+  const res = await window.queryGraphQL(mutation, { id, name, color });
+  return !!(res.data && res.data.updateTopic && res.data.updateTopic._id);
 }

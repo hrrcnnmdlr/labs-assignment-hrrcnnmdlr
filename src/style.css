@@ -122,6 +122,21 @@ nav button:hover, nav button:focus {
   color: #fff;
   box-shadow: 0 2px 8px #0077ff33;
 }
+.nav-btn {
+  background: #0077ff;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 18px;
+  font-weight: 600;
+  font-size: 1em;
+  margin-left: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.nav-btn:hover, .nav-btn:focus {
+  background: #005fcc;
+}
 #user-info {
   font-weight: bold;
   font-size: 1.1em;
@@ -470,22 +485,31 @@ nav button:hover, nav button:focus {
 }
 
 /* --- Кнопки в хедері --- */
-nav .nav-left button, nav .nav-right button, #editTopicsBtn {
-  padding: 10px 26px;
+nav .nav-left button, nav .nav-right button, #editTopicsBtn, .nav-btn {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 70px;
+  min-width: 110px;
+  max-width: 170px;
+  padding: 0 12px;
   font-size: 1.08rem;
-  border-radius: 22px;
+  border-radius: 18px;
   background: linear-gradient(90deg, #e0eaff 60%, #f8faff 100%);
   color: #0077ff;
   border: 1.5px solid #0077ff;
-  font-weight: 600;
+  font-weight: 700;
   box-shadow: 0 1px 4px #0077ff11;
-  margin: 0 8px 0 0;
+  margin: 0 10px 0 0;
+  text-align: center;
   transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+  white-space: pre-line;
 }
-nav .nav-left button:last-child, nav .nav-right button:last-child, #editTopicsBtn:last-child {
+nav .nav-left button:last-child, nav .nav-right button:last-child, #editTopicsBtn:last-child, .nav-btn:last-child {
   margin-right: 0;
 }
-nav .nav-left button:hover, nav .nav-right button:hover, #editTopicsBtn:hover {
+nav .nav-left button:hover, nav .nav-right button:hover, #editTopicsBtn:hover, .nav-btn:hover, .nav-btn:focus {
   background: #0077ff;
   color: #fff;
   box-shadow: 0 2px 8px #0077ff33;

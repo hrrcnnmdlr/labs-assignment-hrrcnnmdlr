@@ -58,16 +58,11 @@ export function showRegister() {
   document.getElementById('loginForm').style.display = 'none';
   document.getElementById('registerForm').style.display = '';
 }
-export async function fetchWithAuth(url, opts = {}) {
-  opts.headers = opts.headers || {};
-  const token = getToken();
-  if (token) opts.headers['Authorization'] = 'Bearer ' + token;
-  return fetch(url, opts);
-}
 export async function loadProfile() {
-  const res = await fetchWithAuth('/.netlify/functions/auth/profile');
-  if (!res.ok) return showMessage('Не вдалося завантажити профіль', 'error');
-  const data = await res.json();
+  const query = `query { profile { _id email nickname } }`;
+  const res = await window.queryGraphQL(query);
+  if (!res.data || !res.data.profile) return showMessage('Не вдалося завантажити профіль', 'error');
+  const data = res.data.profile;
   document.getElementById('profileNickname').value = data.nickname || '';
   document.getElementById('profileEmail').value = data.email || '';
 }
@@ -155,20 +150,22 @@ document.getElementById('registerForm').onsubmit = async e => {
     showMessage('Пароль не відповідає вимогам', 'error');
     return;
   }
-  const res = await fetch('/.netlify/functions/auth/register', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password, nickname })
-  });
-  const data = await res.json();
-  if (res.ok && data.token) {
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('userEmail', email);
-    localStorage.setItem('userNickname', nickname);
-    setAuthUI();
-    showPage('list');
-    showMessage('Акаунт створено!', 'success');
-  } else {
-    showMessage(data.error || 'Помилка реєстрації', 'error');
+  try {
+    const query = `mutation($email: String!, $password: String!, $nickname: String) {\n  register(email: $email, password: $password, nickname: $nickname) { token user { _id email nickname } }\n}`;
+    const res = await window.queryGraphQL(query, { email, password, nickname });
+    const data = res.data && res.data.register ? res.data.register : null;
+    if (data && data.token) {
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('userEmail', data.user.email);
+      localStorage.setItem('userNickname', data.user.nickname || '');
+      setAuthUI();
+      showPage('list');
+      showMessage('Акаунт створено!', 'success');
+    } else {
+      showMessage('Помилка реєстрації', 'error');
+    }
+  } catch (err) {
+    showMessage('Помилка з’єднання з сервером', 'error');
   }
 };
 // --- Перевірка пароля при зміні ---
@@ -183,12 +180,9 @@ document.getElementById('passwordForm').onsubmit = async e => {
     showMessage('Новий пароль не відповідає вимогам', 'error');
     return;
   }
-  const res = await fetchWithAuth('/.netlify/functions/auth/profile', {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ password, newPassword })
-  });
-  if (res.ok) showMessage('Пароль змінено!', 'success');
+  const query = `mutation($password: String!, $newPassword: String!) {\n  updateProfile(password: $password, newPassword: $newPassword) { _id email nickname }\n}`;
+  const res = await window.queryGraphQL(query, { password, newPassword });
+  if (res.data && res.data.updateProfile && res.data.updateProfile._id) showMessage('Пароль змінено!', 'success');
   else showMessage('Помилка зміни пароля', 'error');
 };
 
@@ -198,47 +192,84 @@ document.getElementById('loginForm').onsubmit = async e => {
   const email = document.getElementById('loginEmail').value.trim();
   const password = document.getElementById('loginPass').value;
   try {
-    const res = await fetch('/.netlify/functions/auth/login', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
-    const data = await res.json();
-    if (res.ok && data.token) {
+    const query = `mutation($email: String!, $password: String!) {\n  login(email: $email, password: $password) { token user { _id email nickname } }\n}`;
+    const res = await window.queryGraphQL(query, { email, password });
+    const data = res.data && res.data.login ? res.data.login : null;
+    if (data && data.token) {
       localStorage.setItem('token', data.token);
-      localStorage.setItem('userEmail', email);
-      const profRes = await fetchWithAuth('/.netlify/functions/auth/profile');
-      if (profRes.ok) {
-        const prof = await profRes.json();
-        localStorage.setItem('userNickname', prof.nickname || '');
-      } else {
-        localStorage.setItem('userNickname', '');
-      }
+      localStorage.setItem('userEmail', data.user.email);
+      localStorage.setItem('userNickname', data.user.nickname || '');
       setAuthUI();
       showPage('list');
       showMessage('Вхід успішний!', 'success');
     } else {
-      showMessage(data.error || 'Невірний email або пароль', 'error');
+      showMessage('Невірний email або пароль', 'error');
     }
   } catch (err) {
     showMessage('Помилка з’єднання з сервером', 'error');
   }
 };
 
+// --- РЕЄСТРАЦІЯ ---
+document.getElementById('registerForm').onsubmit = async e => {
+  e.preventDefault();
+  const email = document.getElementById('regEmail').value.trim();
+  const password = document.getElementById('regPass').value;
+  const nickname = document.getElementById('regNickname') ? document.getElementById('regNickname').value.trim() : '';
+  const { valid, failed } = validatePassword(password);
+  if (!valid) {
+    showPasswordHints(document.getElementById('regPass'), 'regPassHints');
+    showMessage('Пароль не відповідає вимогам', 'error');
+    return;
+  }
+  try {
+    const query = `mutation($email: String!, $password: String!, $nickname: String) {\n  register(email: $email, password: $password, nickname: $nickname) { token user { _id email nickname } }\n}`;
+    const res = await window.queryGraphQL(query, { email, password, nickname });
+    const data = res.data && res.data.register ? res.data.register : null;
+    if (data && data.token) {
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('userEmail', data.user.email);
+      localStorage.setItem('userNickname', data.user.nickname || '');
+      setAuthUI();
+      showPage('list');
+      showMessage('Акаунт створено!', 'success');
+    } else {
+      showMessage('Помилка реєстрації', 'error');
+    }
+  } catch (err) {
+    showMessage('Помилка з’єднання з сервером', 'error');
+  }
+};
+
+// --- ЗМІНА ПАРОЛЯ ---
+document.getElementById('passwordForm').onsubmit = async e => {
+  e.preventDefault();
+  const password = document.getElementById('oldPass').value;
+  const newPassword = document.getElementById('newPass').value;
+  const { valid, failed } = validatePassword(newPassword);
+  if (!password || !newPassword) return;
+  if (!valid) {
+    showPasswordHints(document.getElementById('newPass'), 'newPassHints');
+    showMessage('Новий пароль не відповідає вимогам', 'error');
+    return;
+  }
+  const query = `mutation($password: String!, $newPassword: String!) {\n  updateProfile(password: $password, newPassword: $newPassword) { _id email nickname }\n}`;
+  const res = await window.queryGraphQL(query, { password, newPassword });
+  if (res.data && res.data.updateProfile && res.data.updateProfile._id) showMessage('Пароль змінено!', 'success');
+  else showMessage('Помилка зміни пароля', 'error');
+};
+
 // --- ОНОВЛЕННЯ ПРОФІЛЮ (нікнейм) ---
 document.getElementById('profileForm').onsubmit = async e => {
   e.preventDefault();
   const nickname = document.getElementById('profileNickname').value.trim();
-  const res = await fetchWithAuth('/.netlify/functions/auth/profile', {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ nickname })
-  });
-  if (res.ok) {
+  const query = `mutation($nickname: String!) {\n  updateProfile(nickname: $nickname) { _id email nickname }\n}`;
+  const res = await window.queryGraphQL(query, { nickname });
+  if (res.data && res.data.updateProfile && res.data.updateProfile._id) {
     localStorage.setItem('userNickname', nickname);
     setAuthUI();
     showMessage('Профіль оновлено!', 'success');
   } else {
-    const data = await res.json();
-    showMessage(data.error || 'Помилка оновлення профілю', 'error');
+    showMessage('Помилка оновлення профілю', 'error');
   }
 };
