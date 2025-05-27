@@ -1,13 +1,10 @@
 const { MongoClient } = require("mongodb");
-const client = new MongoClient(process.env.MONGO_URI);
-let db;
 
 async function connectDB() {
-  if (!db) {
-    await client.connect();
-    db = client.db(process.env.DB_NAME);
-  }
-  return db.collection("flashcards");
+  const client = new MongoClient(process.env.MONGO_URI);
+  await client.connect();
+  const db = client.db(process.env.DB_NAME);
+  return { collection: db.collection("flashcards"), client };
 }
 
 module.exports = connectDB;

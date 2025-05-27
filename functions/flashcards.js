@@ -20,7 +20,7 @@ exports.handler = async (event) => {
   }
 
   try {
-    const collection = await connectDB();
+    const { collection, client } = await connectDB();
     const pathParts = event.path.split("/").filter(Boolean);
     // Netlify local dev: pathParts = [".netlify", "functions", "flashcards", id?]
     let id = null;
@@ -35,6 +35,7 @@ exports.handler = async (event) => {
           if (!isValidHexId(id)) return { statusCode: 400, headers, body: JSON.stringify({ error: "Invalid id format" }) };
           const card = await collection.findOne({ _id: new ObjectId(id) });
           if (!card) return { statusCode: 404, headers, body: JSON.stringify({ error: "Not found" }) };
+          await client.close();
           return { statusCode: 200, headers, body: JSON.stringify(card) };
         } else {
           let skip = 0, take = 20, deck;
@@ -45,6 +46,7 @@ exports.handler = async (event) => {
           }
           const query = deck ? { deckId: deck } : {};
           const cards = await collection.find(query).skip(Number(skip)).limit(Number(take)).toArray();
+          await client.close();
           return { statusCode: 200, headers, body: JSON.stringify(cards) };
         }
       }
@@ -64,6 +66,7 @@ exports.handler = async (event) => {
           return { statusCode: 400, headers, body: JSON.stringify({ error: "Invalid deckId format" }) };
         }
         const result = await collection.insertOne(data);
+        await client.close();
         return { statusCode: 201, headers, body: JSON.stringify({ _id: result.insertedId, ...data }) };
       }
       case "PUT": {
@@ -82,6 +85,7 @@ exports.handler = async (event) => {
         if (result.matchedCount === 0) {
           return { statusCode: 404, headers, body: JSON.stringify({ error: "Not found" }) };
         }
+        await client.close();
         return { statusCode: 200, headers, body: JSON.stringify({ _id: id, ...updateData }) };
       }
       case "DELETE": {
@@ -91,9 +95,11 @@ exports.handler = async (event) => {
         if (result.deletedCount === 0) {
           return { statusCode: 404, headers, body: JSON.stringify({ error: "Not found" }) };
         }
+        await client.close();
         return { statusCode: 200, headers, body: JSON.stringify({ success: true }) };
       }
       default:
+        await client.close();
         return { statusCode: 405, headers, body: JSON.stringify({ error: "Method not allowed" }) };
     }
   } catch (error) {
