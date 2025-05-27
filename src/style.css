@@ -546,7 +546,7 @@ nav .nav-left button:hover, nav .nav-right button:hover, #editTopicsBtn:hover, .
 }
 #topicsList input[type="color"] {
   width: 48px;
-  height: 38px;
+  height: 40px;
   border: none;
   background: none;
   cursor: pointer;
