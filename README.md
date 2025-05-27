@@ -1,61 +1,61 @@
 [![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/Om1zqYVh)
 
-# Flashcard Generator (Lab 1-4)
+# Генератор Флешкарток
 
-Генератор флешкарток — це вебзастосунок для створення, організації та вивчення цифрових карток. Підтримує MongoDB, REST API, деплой на Netlify та GitHub Pages.
+Сучасний веб-додаток для створення, імпорту, тестування та організації флешкарток з підтримкою тем (topics), кольорів, авторизації та зручного UX.
 
-## Основна ідея
-- Створення, редагування, видалення та перегляд флешкарток
-- Організація карток у колоди (deckId)
-- Простий сучасний інтерфейс (HTML+CSS+JS)
-- Бекенд на Netlify Functions (Node.js), база — MongoDB (локально або Atlas)
+## Можливості
+- **Авторизація:** реєстрація, вхід, профіль, зміна пароля (JWT, bcryptjs).
+- **CRUD для карток:** створення, редагування, видалення, імпорт з .txt/.json.
+- **Теми (topics):** створення, редагування, видалення, вибір кольору, автогенерація дефолтних тем.
+- **Тестування:** по вибраній темі, flip-картка, підрахунок балів, статистика.
+- **Сучасний UI/UX:** адаптивний дизайн, плавні тіні, красиві кнопки, великі input color, комфортний UX, live-оновлення всіх списків.
 
-## Як запустити локально
+## Швидкий старт
 
-1. **Клонування репозиторію**
-    ```bash
-    git clone <посилання на репозиторій>
-    cd FlashCardGen
-    ```
+1. **Встановіть залежності:**
+   ```sh
+   npm install
+   ```
+2. **Створіть файл `.env` у корені проекту:**
+   ```env
+   MONGO_URI=your_mongodb_connection_string
+   DB_NAME=your_db_name
+   JWT_SECRET=your_secret
+   ```
+3. **Запустіть Netlify Functions (локально):**
+   ```sh
+   npx netlify dev
+   ```
+   або через Netlify Dashboard для деплою.
 
-2. **Встановлення залежностей**
-    ```bash
-    npm install
-    ```
+4. **Відкрийте `index.html` у браузері** (або використовуйте Netlify preview).
 
-3. **Налаштування .env**
-    - Створіть файл `.env` у корені проекту:
-      ```
-      MONGO_URI=mongodb://localhost:27017
-      DB_NAME=flashcards
-      ```
-    - або для MongoDB Atlas:
-      ```
-      MONGO_URI=mongodb+srv://<user>:<password>@<cluster>.mongodb.net/?retryWrites=true&w=majority
-      DB_NAME=flashcards
-      ```
+## Структура проекту
+- `functions/` — серверніless-функції (авторизація, картки, теми, БД)
+- `src/` — фронтенд (JS-логіка, стилі)
+- `index.html` — основна сторінка
+- `input/` — приклади для імпорту карток
 
-4. **Запуск локального сервера**
-    ```bash
-    netlify dev
-    ```
-    - Бекенд: http://localhost:8888/.netlify/functions/flashcards
-    - Фронтенд: відкрийте `index.html` у браузері
+## Імпорт карток
+- Підтримується формат `.json` (масив об'єктів з полями `q`, `a`, `topic`) та `.txt` (блоки з q:/a:/topic:).
+- Нові теми створюються автоматично при імпорті.
 
-## Як взаємодіяти
-- Додавайте, редагуйте, видаляйте картки через інтерфейс
-- Для роботи з колодами використовуйте поле `deckId` (можна фільтрувати GET /flashcards?deck=deckId)
-- API підтримує всі CRUD-операції (GET, POST, PUT, DELETE)
+## Основні залежності
+- `mongodb`, `jsonwebtoken`, `bcryptjs`, `dotenv` (сервер)
+- Чистий JS + CSS (фронтенд)
 
 ## Деплой
-- **Netlify**: імпортуйте репозиторій, вкажіть змінні середовища, build command: `npm install`, publish/functions directory: `functions`
-- **GitHub Pages**: для фронтенду (index.html)
+- Працює на Netlify (Functions + SPA).
+- Для локального запуску потрібен MongoDB (Atlas або локальний).
 
-## Виконані завдання
-- Реалізовано повний REST API для флешкарток
-- Підключення до MongoDB (локально/Atlas) через .env
-- CRUD-операції для карток, підтримка deckId (parent-child)
-- Розширене оброблення помилок у API
-- Простий фронтенд для взаємодії з API
-- Деплой на Netlify (бекенд) та GitHub Pages (фронтенд)
-- README з інструкціями та прикладами
+## Автори
+- Чайка Валерія Сергіївна
+GitHub: hrrcnnmdlr
+
+- Венгринюк Марія Михайлівна
+GitHub: mriotte
+
+---
+
+**Зворотній зв'язок та побажання вітаються!**

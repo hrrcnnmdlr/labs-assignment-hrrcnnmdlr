@@ -1,0 +1,737 @@
+body { font-family: Arial, sans-serif; background: #f7f7f7; margin: 0; padding: 0; }
+.container { max-width: 600px; margin: 40px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #0001; padding: 24px; }
+h1 { text-align: center; }
+nav { display: flex; justify-content: flex-start; align-items: center; gap: 12px; margin-bottom: 20px; position: relative; }
+nav .nav-left { display: flex; gap: 8px; }
+nav .nav-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+nav button { padding: 8px 16px; font-size: 1rem; margin: 0 4px; cursor: pointer; }
+nav button:hover { background: #0077ff; color: #fff; }
+form { display: flex; gap: 8px; margin-bottom: 24px; }
+input, button { padding: 8px; font-size: 1rem; }
+input { flex: 1; border: 1px solid #ccc; border-radius: 4px; }
+button { background: #0077ff; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+button:hover { background: #005fcc; }
+.flashcard { background: #f0f4ff; margin-bottom: 12px; padding: 12px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; }
+.flashcard .qa { flex: 1; }
+.flashcard-actions { display: flex; gap: 8px; }
+.flashcard input { width: 100%; margin-bottom: 4px; }
+#auth-block { max-width: 350px; margin: 0 auto 24px auto; }
+#auth-block form { flex-direction: column; gap: 12px; background: #f8faff; border-radius: 8px; box-shadow: 0 1px 4px #0001; padding: 18px 16px; }
+#auth-block input { border: 1px solid #bcd; border-radius: 4px; }
+#auth-block button { background: #0077ff; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+#auth-block button:hover { background: #005fcc; }
+#auth-block label { font-size: 1rem; color: #333; }
+#page-profile { background: #f8faff; border-radius: 8px; box-shadow: 0 1px 4px #0001; padding: 24px; margin-top: 24px; }
+#page-profile h2, #page-profile h3 { text-align: center; }
+#page-profile form { margin-bottom: 18px; }
+#user-info {
+  font-weight: 600;
+  font-size: 1.08em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f3f7ff;
+  border-radius: 18px;
+  box-shadow: 0 1px 4px #0077ff11;
+}
+#user-info .user-icon {
+  width: 26px;
+  height: 26px;
+  font-size: 1.1em;
+  line-height: 26px;
+  background: linear-gradient(135deg, #0077ff 60%, #00c6ff 100%);
+  color: #fff;
+  border-radius: 50%;
+  text-align: center;
+  font-weight: bold;
+}
+
+#user-info:hover {
+  background: #e0eaff;
+  box-shadow: 0 2px 8px #0077ff22;
+
+}
+#user-info .user-icon:hover {
+  background: #005fcc;
+  box-shadow: 0 2px 8px #005fcc22;
+}
+
+#message {
+  display:none; max-width:400px; margin:16px auto; padding:12px; border-radius:6px; text-align:center; font-size:1.1em;
+  box-shadow: 0 2px 8px #0001;
+}
+input:disabled, button:disabled { opacity: 0.6; cursor: not-allowed; }
+input:focus { outline: 2px solid #0077ff33; }
+#regPass, #newPass { transition: border-color 0.2s; }
+/* --- HEADER/НАВІГАЦІЯ --- */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #fff;
+  border-radius: 0 0 18px 18px;
+  box-shadow: 0 2px 16px #0002;
+  padding: 18px 0 10px 0;
+  margin-bottom: 32px;
+  transition: box-shadow 0.2s;
+}
+header h1 {
+  margin: 0 0 18px 0;
+  font-size: 2.3rem;
+  font-weight: 800;
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 18px;
+  flex-wrap: wrap;
+  padding: 0 18px;
+}
+nav .nav-left {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+nav .nav-right {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin-left: auto;
+}
+nav .nav-profile {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+nav button {
+  padding: 10px 22px;
+  font-size: 1.08rem;
+  border-radius: 22px;
+  background: #f3f7ff;
+  color: #0077ff;
+  border: 1.5px solid #0077ff;
+  font-weight: 600;
+  box-shadow: 0 1px 4px #0077ff11;
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+}
+nav button:hover, nav button:focus {
+  background: #0077ff;
+  color: #fff;
+  box-shadow: 0 2px 8px #0077ff33;
+}
+#user-info {
+  font-weight: bold;
+  font-size: 1.1em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f3f7ff;
+  border: 1.5px solid #0077ff;
+  border-radius: 22px;
+  padding: 8px 14px 8px 8px;
+  box-shadow: 0 1px 4px #0077ff11;
+}
+#user-info .user-icon {
+  width: 26px;
+  height: 26px;
+  font-size: 1.1em;
+  line-height: 26px;
+  background: #0077ff;
+  color: #fff;
+  border-radius: 50%;
+  text-align: center;
+  margin-right: 2px;
+}
+
+@media (max-width: 600px) {
+  nav {
+    flex-direction: column;
+    gap: 10px;
+    padding: 0 6px;
+    align-items: stretch;
+  }
+  nav .nav-left, nav .nav-right, nav .nav-profile {
+    flex-direction: row;
+    gap: 8px;
+    width: 100%;
+    justify-content: center;
+  }
+  nav .nav-right {
+    margin-left: 0;
+    margin-top: 6px;
+    justify-content: center;
+  }
+  nav .nav-profile {
+    justify-content: center;
+    margin-top: 0;
+  }
+  nav button {
+    width: 100%;
+    min-width: 0;
+    padding: 10px 0;
+    font-size: 1rem;
+  }
+  #user-info {
+    padding: 4px 8px 4px 6px;
+    font-size: 1em;
+  }
+  #user-info .user-icon {
+    width: 22px;
+    height: 22px;
+    font-size: 1em;
+    line-height: 22px;
+  }
+}
+
+/* --- КІНЕЦЬ HEADER --- */
+/* --- Додавання/редагування картки --- */
+#addForm, #editForm {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  background: #f8faff;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px #0077ff11;
+  padding: 28px 20px;
+  max-width: 420px;
+  margin: 0 auto 28px auto;
+}
+#addForm input, #editForm input, #addForm select, #editForm select {
+  border: 1.5px solid #0077ff44;
+  border-radius: 7px;
+  padding: 12px;
+  font-size: 1.08em;
+  background: #fff;
+  margin-bottom: 0;
+  transition: border 0.2s;
+}
+#addForm input:focus, #editForm input:focus, #addForm select:focus, #editForm select:focus {
+  border: 1.5px solid #0077ff;
+  outline: none;
+}
+#addForm label, #editForm label {
+  font-weight: 500;
+  color: #0077ff;
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+#addForm button, #editForm button {
+  margin-top: 10px;
+  padding: 12px 0;
+  font-size: 1.08em;
+  border-radius: 9px;
+  background: #0077ff;
+  color: #fff;
+  border: none;
+  font-weight: 600;
+  box-shadow: 0 1px 4px #0077ff11;
+  transition: background 0.18s, color 0.18s;
+}
+#addForm button:hover, #editForm button:hover {
+  background: #005fcc;
+}
+#topic-block-form, #editForm label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+#topicSelect, #editTopicSelect {
+  width: 100%;
+  border-radius: 7px;
+  padding: 10px;
+  font-size: 1em;
+  border: 1.5px solid #0077ff44;
+  background: #f3f7ff;
+  margin-top: 4px;
+}
+#addTopicBtn, #saveTopicBtn, #saveTopicBtn2, #cancelTopicBtn {
+  margin-top: 8px;
+  background: #e0eaff;
+  color: #0077ff;
+  border: 1px solid #0077ff44;
+  border-radius: 7px;
+  font-size: 1em;
+  padding: 9px 0;
+  transition: background 0.18s, color 0.18s;
+}
+#addTopicBtn:hover, #saveTopicBtn:hover, #saveTopicBtn2:hover, #cancelTopicBtn:hover {
+  background: #0077ff;
+  color: #fff;
+}
+#newTopicInput {
+  margin-top: 8px;
+  border: 1.5px solid #0077ff44;
+  border-radius: 7px;
+  padding: 10px;
+  font-size: 1em;
+}
+
+/* --- Профіль --- */
+#page-profile {
+  background: #f8faff;
+  border-radius: 18px;
+  box-shadow: 0 2px 12px #0077ff11;
+  padding: 36px 28px;
+  margin-top: 32px;
+  max-width: 440px;
+  margin-left: auto;
+  margin-right: auto;
+}
+#page-profile h2, #page-profile h3 {
+  text-align: center;
+  color: #0077ff;
+  margin-bottom: 20px;
+}
+#profileForm, #passwordForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px #0077ff11;
+  padding: 22px 16px;
+  margin-bottom: 20px;
+}
+#profileForm label {
+  color: #0077ff;
+  font-weight: 500;
+}
+#profileForm input, #passwordForm input {
+  border: 1.5px solid #0077ff44;
+  border-radius: 7px;
+  padding: 10px;
+  font-size: 1em;
+  background: #f3f7ff;
+}
+#profileForm button, #passwordForm button {
+  background: #0077ff;
+  color: #fff;
+  border: none;
+  border-radius: 9px;
+  font-size: 1.08em;
+  font-weight: 600;
+  padding: 12px 0;
+  margin-top: 10px;
+  box-shadow: 0 1px 4px #0077ff11;
+  transition: background 0.18s, color 0.18s;
+}
+#profileForm button:hover, #passwordForm button:hover {
+  background: #005fcc;
+}
+
+/* --- Тестування --- */
+#page-test {
+  background: #f8faff;
+  border-radius: 18px;
+  box-shadow: 0 2px 12px #0077ff11;
+  padding: 36px 28px;
+  max-width: 440px;
+  margin: 36px auto 0 auto;
+}
+#testTopicForm {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+#testTopicSelect {
+  border: 1.5px solid #0077ff44;
+  border-radius: 7px;
+  padding: 10px;
+  font-size: 1em;
+  background: #f3f7ff;
+}
+#testBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  margin-top: 22px;
+}
+.test-card {
+  width: 340px;
+  height: 190px;
+  perspective: 900px;
+  margin-bottom: 12px;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px #0077ff22;
+  transition: box-shadow 0.2s;
+}
+.test-card:hover {
+  box-shadow: 0 4px 16px #0077ff33;
+}
+.test-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+  cursor: pointer;
+}
+.test-card.flipped .test-card-inner {
+  transform: rotateY(180deg);
+}
+.test-card-front, .test-card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25em;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px #0077ff22;
+  background: #fff;
+  padding: 18px;
+  color: #222;
+}
+.test-card-front {
+  background: linear-gradient(135deg, #e0eaff 60%, #f8faff 100%);
+}
+.test-card-back {
+  background: linear-gradient(135deg, #d1ffd6 60%, #f8faff 100%);
+  transform: rotateY(180deg);
+}
+#showAnswerBtn, #testCorrectBtn, #testWrongBtn {
+  padding: 12px 28px;
+  font-size: 1.08em;
+  border-radius: 9px;
+  background: #0077ff;
+  color: #fff;
+  border: none;
+  font-weight: 600;
+  margin: 0 10px 0 0;
+  box-shadow: 0 1px 4px #0077ff11;
+  transition: background 0.18s, color 0.18s;
+}
+#showAnswerBtn:hover, #testCorrectBtn:hover, #testWrongBtn:hover {
+  background: #005fcc;
+}
+#testActions {
+  display: flex;
+  gap: 16px;
+  margin-top: 10px;
+}
+#testStats {
+  margin-top: 22px;
+  font-size: 1.1em;
+  text-align: center;
+  background: #e0eaff;
+  border-radius: 12px;
+  padding: 16px 0;
+  color: #0077ff;
+  box-shadow: 0 1px 4px #0077ff11;
+}
+@media (max-width: 600px) {
+  #addForm, #editForm, #page-profile, #page-test {
+    max-width: 98vw;
+    padding: 12px 2vw;
+  }
+  .test-card {
+    width: 98vw;
+    min-width: 0;
+    height: 140px;
+  }
+}
+
+/* --- Картки на головній сторінці --- */
+.flashcard {
+  border-radius: 14px;
+  box-shadow: 0 2px 8px #0077ff22;
+  margin-bottom: 14px;
+  padding: 18px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.08em;
+  background: #e0eaff;
+  transition: box-shadow 0.2s, background 0.2s;
+}
+.flashcard:hover {
+  box-shadow: 0 4px 16px #0077ff33;
+  background: #d1eaff;
+}
+.flashcard .qa {
+  flex: 1;
+}
+.flashcard-actions {
+  display: flex;
+  gap: 10px;
+}
+.flashcard input {
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+/* --- Кнопки в хедері --- */
+nav .nav-left button, nav .nav-right button, #editTopicsBtn {
+  padding: 10px 26px;
+  font-size: 1.08rem;
+  border-radius: 22px;
+  background: linear-gradient(90deg, #e0eaff 60%, #f8faff 100%);
+  color: #0077ff;
+  border: 1.5px solid #0077ff;
+  font-weight: 600;
+  box-shadow: 0 1px 4px #0077ff11;
+  margin: 0 8px 0 0;
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+}
+nav .nav-left button:last-child, nav .nav-right button:last-child, #editTopicsBtn:last-child {
+  margin-right: 0;
+}
+nav .nav-left button:hover, nav .nav-right button:hover, #editTopicsBtn:hover {
+  background: #0077ff;
+  color: #fff;
+  box-shadow: 0 2px 8px #0077ff33;
+}
+
+/* --- Відступ між кнопками і списком карток --- */
+#page-list > div {
+  margin-bottom: 24px;
+}
+
+/* --- Сторінка редагування тем --- */
+#page-edit-topics {
+  background: #f8faff;
+  border-radius: 18px;
+  box-shadow: 0 2px 12px #0077ff11;
+  padding: 36px 28px;
+  max-width: 440px;
+  margin: 36px auto 0 auto;
+}
+#page-edit-topics h2 {
+  text-align: center;
+  color: #0077ff;
+  margin-bottom: 24px;
+}
+#topicsList > div {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 18px;
+  background: #e0eaff;
+  border-radius: 10px;
+  padding: 12px 16px;
+  box-shadow: 0 1px 4px #0077ff11;
+}
+#topicsList input[type="color"] {
+  width: 48px;
+  height: 38px;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+#topicsList input[type="text"] {
+  font-size: 1.08em;
+  padding: 8px 10px;
+  border-radius: 7px;
+  border: 1.5px solid #0077ff44;
+  background: #fff;
+}
+#topicsList button {
+  background: #0077ff;
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  padding: 8px 18px;
+  font-size: 1em;
+  font-weight: 600;
+  transition: background 0.18s, color 0.18s;
+}
+#topicsList button:hover {
+  background: #005fcc;
+}
+#topicsList button:last-child {
+  background: #ffe0e0;
+  color: #a00;
+}
+#topicsList button:last-child:hover {
+  background: #ffbdbd;
+  color: #a00;
+}
+
+/* --- Додатковий комфорт --- */
+button, .btn {
+  background: linear-gradient(90deg, #0077ff 60%, #5ecbff 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 22px;
+  font-size: 1rem;
+  font-weight: 500;
+  margin: 8px 6px 8px 0;
+  box-shadow: 0 2px 8px #0077ff22;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+  outline: none;
+  min-width: 44px;
+}
+button:last-child, .btn:last-child {
+  margin-right: 0;
+}
+button:hover, .btn:hover {
+  background: linear-gradient(90deg, #005fcc 60%, #3eb8ff 100%);
+  box-shadow: 0 4px 16px #0077ff33;
+  transform: translateY(-2px) scale(1.04);
+}
+button:active, .btn:active {
+  background: linear-gradient(90deg, #005fcc 60%, #3eb8ff 100%);
+  box-shadow: 0 2px 8px #0077ff22;
+  transform: scale(0.98);
+}
+input[type="color"] {
+  width: 48px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  margin: 0 10px 0 0;
+  box-shadow: 0 1px 4px #0077ff22;
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+}
+input[type="color"]:hover {
+  box-shadow: 0 2px 8px #0077ff33;
+}
+input, select, textarea {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #0077ff33;
+  margin: 8px 0 16px 0;
+  font-size: 1rem;
+  transition: border 0.2s, box-shadow 0.2s;
+  box-shadow: 0 1px 4px #0077ff11;
+}
+input:focus, select:focus, textarea:focus {
+  border: 1.5px solid #0077ff99;
+  box-shadow: 0 2px 8px #0077ff22;
+}
+select {
+  min-width: 120px;
+  background: #f7fbff;
+  margin-right: 10px;
+}
+.page, .container {
+  padding: 24px 12px 32px 12px;
+}
+#topicsList > div {
+  margin-bottom: 16px;
+  padding: 12px 10px;
+  border-radius: 10px;
+  background: #f7fbff;
+  box-shadow: 0 1px 6px #0077ff11;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+#topicsList input[type="text"] {
+  margin: 0 10px 0 0;
+  min-width: 120px;
+}
+#topicsList input[type="color"] {
+  margin: 0 10px 0 0;
+}
+#topicsList button {
+  margin: 0 8px 0 0;
+  padding: 7px 16px;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+#topicsList button:last-child {
+  margin-right: 0;
+}
+#editTopicsBtn {
+  margin-left: 12px !important;
+}
+#addTopicBtn {
+  margin-left: 8px;
+}
+#page-list > button {
+  margin-bottom: 18px;
+}
+#testActions button {
+  margin: 0 10px 0 0;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 1.1rem;
+}
+#testActions button:last-child {
+  margin-right: 0;
+}
+.test-card {
+  margin: 18px auto 24px auto;
+  box-shadow: 0 4px 24px #0077ff22;
+  border-radius: 18px;
+  min-width: 260px;
+  max-width: 420px;
+  min-height: 120px;
+  padding: 24px 18px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: box-shadow 0.2s, transform 0.1s;
+}
+.test-card:hover {
+  box-shadow: 0 8px 32px #0077ff33;
+  transform: scale(1.03);
+}
+.test-card.flipped .test-card-inner {
+  transform: rotateY(180deg);
+}
+.test-card-inner {
+  transition: transform 0.5s;
+  transform-style: preserve-3d;
+  position: relative;
+}
+.test-card-front, .test-card-back {
+  backface-visibility: hidden;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  left: 0; top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  border-radius: 18px;
+  padding: 18px;
+}
+.test-card-front {
+  z-index: 2;
+}
+.test-card-back {
+  transform: rotateY(180deg);
+  background: #fff;
+  color: #222;
+}
+::-webkit-scrollbar {
+  width: 10px;
+  background: #e0eaff;
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: #b3d6ff;
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #7bbcff;
+}
+@media (max-width: 600px) {
+  .container, .page {
+    padding: 10px 2vw 18px 2vw;
+  }
+  button, .btn {
+    padding: 9px 10px;
+    font-size: 0.98rem;
+  }
+  .test-card {
+    min-width: 90vw;
+    max-width: 98vw;
+    padding: 12px 4vw;
+    font-size: 1.05rem;
+  }
+}

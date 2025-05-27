@@ -4,142 +4,106 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Генератор Флешкарток</title>
-  <style>
-    body { font-family: Arial, sans-serif; background: #f7f7f7; margin: 0; padding: 0; }
-    .container { max-width: 600px; margin: 40px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #0001; padding: 24px; }
-    h1 { text-align: center; }
-    nav { text-align: center; margin-bottom: 20px; }
-    nav button { padding: 8px 16px; font-size: 1rem; margin: 0 4px; cursor: pointer; }
-    nav button:hover { background: #0077ff; color: #fff; }
-    form { display: flex; gap: 8px; margin-bottom: 24px; }
-    input, button { padding: 8px; font-size: 1rem; }
-    input { flex: 1; border: 1px solid #ccc; border-radius: 4px; }
-    button { background: #0077ff; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
-    button:hover { background: #005fcc; }
-    .flashcard { background: #f0f4ff; margin-bottom: 12px; padding: 12px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; }
-    .flashcard .qa { flex: 1; }
-    .flashcard-actions { display: flex; gap: 8px; }
-    .flashcard input { width: 100%; margin-bottom: 4px; }
-  </style>
+  <link rel="stylesheet" href="src/style.css">
 </head>
 <body>
   <div class="container">
     <h1>Генератор Флешкарток</h1>
     <nav>
-      <button onclick="showPage('list')">Всі картки</button>
-      <button onclick="showPage('add')">Додати картку</button>
+      <div class="nav-left">
+        <button onclick="showPage('list')">Всі картки</button>
+        <button onclick="showPage('add')">Додати картку</button>
+      </div>
+      <div class="nav-right">
+        <div class="nav-profile">
+          <span id="user-info" onclick="showPage('profile')"></span>
+          <button id="logoutBtn" style="display:none;" onclick="logout()">Вийти</button>
+        </div>
+      </div>
     </nav>
-    <div id="page-list" style="display:none;">
+    <div id="auth-block">
+      <form id="loginForm" style="display:none; gap:8px; margin-bottom:16px;">
+        <input type="email" id="loginEmail" placeholder="Email" required />
+        <input type="password" id="loginPass" placeholder="Пароль" required />
+        <button type="submit">Увійти</button>
+        <button type="button" onclick="showRegister()">Реєстрація</button>
+      </form>
+      <form id="registerForm" style="display:none; gap:8px; margin-bottom:16px;">
+        <input type="email" id="regEmail" placeholder="Email" required />
+        <input type="password" id="regPass" placeholder="Пароль" required />
+        <input type="text" id="regNickname" placeholder="Нікнейм (необов’язково)" />
+        <button type="submit">Зареєструватися</button>
+        <button type="button" onclick="showLogin()">Назад</button>
+      </form>
+    </div>
+    <div id="page-list" class="page" style="display:none;">
       <h2>Всі картки</h2>
+      <div style="margin-bottom:16px;">
+        <button id="goToTestBtn">Тестування по темах</button>
+      </div>
       <div id="flashcards"></div>
     </div>
-    <div id="page-add" style="display:none;">
+    <div id="page-add" class="page" style="display:none;">
       <h2>Додати картку</h2>
       <form id="addForm">
         <input type="text" id="question" placeholder="Питання" required />
         <input type="text" id="answer" placeholder="Відповідь" required />
+        <!-- Додаємо вибір теми -->
+        <div id="topic-block-form">
+          <label>Тема:
+            <select id="topicSelect"></select>
+            <button id="addTopicBtn" type="button">+ Додати тему</button>
+          </label>
+        </div>
         <button type="submit">Додати</button>
       </form>
     </div>
-    <div id="page-edit" style="display:none;"></div>
+    <div id="page-edit" class="page" style="display:none;"></div>
+    <div id="page-profile" class="page" style="display:none;">
+      <h2>Профіль</h2>
+      <form id="profileForm" style="display:flex; flex-direction:column; gap:10px; max-width:350px; margin:auto;">
+        <label>Нікнейм: <input type="text" id="profileNickname" /></label>
+        <label>Email: <input type="email" id="profileEmail" disabled /></label>
+        <button type="submit">Зберегти зміни</button>
+      </form>
+      <h3>Змінити пароль</h3>
+      <form id="passwordForm" style="display:flex; flex-direction:column; gap:10px; max-width:350px; margin:auto;">
+        <input type="password" id="oldPass" placeholder="Старий пароль" required />
+        <input type="password" id="newPass" placeholder="Новий пароль" required />
+        <button type="submit">Змінити пароль</button>
+      </form>
+    </div>
+    <div id="page-test" class="page" style="display:none;">
+      <h2>Тестування по темі</h2>
+      <form id="testTopicForm">
+        <label>Оберіть тему:
+          <select id="testTopicSelect"></select>
+        </label>
+        <button type="submit">Почати тест</button>
+      </form>
+      <div id="testBlock" style="display:none;">
+        <div id="testQuestion"></div>
+        <button id="showAnswerBtn">Показати відповідь</button>
+        <div id="testAnswer" style="display:none;"></div>
+        <div id="testActions" style="display:none;">
+          <button id="testCorrectBtn">Вгадав</button>
+          <button id="testWrongBtn">Не вгадав</button>
+        </div>
+        <div id="testStats"></div>
+      </div>
+    </div>
+    <div id="message"></div>
+    <!-- Модальне вікно для нової теми -->
+    <div id="newTopicModal" style="display:none; position:fixed; left:0;top:0;right:0;bottom:0; background:#0008; z-index:1000; align-items:center; justify-content:center;">
+      <div style="background:#fff; padding:24px; border-radius:12px; min-width:240px;">
+        <h3>Нова тема</h3>
+        <input type="text" id="newTopicInput" placeholder="Назва теми" required>
+        <input type="color" id="newTopicColor" value="#e0eaff">
+        <button id="saveTopicBtn">Зберегти</button>
+        <button onclick="document.getElementById('newTopicModal').style.display='none'">Скасувати</button>
+      </div>
+    </div>
   </div>
-  <script>
-    const api = "/.netlify/functions/flashcards";
-    let editingId = null;
-
-    function showPage(page) {
-      document.getElementById('page-list').style.display = page === 'list' ? '' : 'none';
-      document.getElementById('page-add').style.display = page === 'add' ? '' : 'none';
-      document.getElementById('page-edit').style.display = page === 'edit' ? '' : 'none';
-      if (page === 'list') fetchFlashcards();
-      if (page === 'add') document.getElementById('addForm').reset();
-    }
-
-    async function fetchFlashcards() {
-      try {
-        const res = await fetch(api);
-        if (!res.ok) throw new Error('Помилка при завантаженні карток');
-        const data = await res.json();
-        updateList(Array.isArray(data) ? data : []);
-      } catch (e) {
-        document.getElementById('flashcards').innerHTML = '<span style="color:red">Не вдалося завантажити картки</span>';
-      }
-    }
-
-    function updateList(cards) {
-      const container = document.getElementById('flashcards');
-      container.innerHTML = '';
-      if (!Array.isArray(cards) || !cards.length) {
-        container.innerHTML = '<em>Немає карток</em>';
-        return;
-      }
-      cards.forEach(card => {
-        const div = document.createElement('div');
-        div.className = 'flashcard';
-        div.innerHTML = `
-          <div class="qa">
-            <strong>Q:</strong> <span>${card.question || ''}</span><br>
-            <strong>A:</strong> <span>${card.answer || ''}</span>
-          </div>
-          <div class="flashcard-actions">
-            <button onclick="editCard('${card._id}')">✏️</button>
-            <button onclick="deleteCard('${card._id}')">🗑️</button>
-          </div>
-        `;
-        container.appendChild(div);
-      });
-    }
-
-    document.getElementById('addForm').onsubmit = async e => {
-      e.preventDefault();
-      const question = document.getElementById('question').value.trim();
-      const answer = document.getElementById('answer').value.trim();
-      if (!question || !answer) return;
-      await fetch(api, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question, answer })
-      });
-      showPage('list');
-    };
-
-    window.deleteCard = async id => {
-      if (!confirm('Видалити цю картку?')) return;
-      await fetch(`${api}/${id}`, { method: 'DELETE' });
-      showPage('list');
-    };
-
-    window.editCard = async id => {
-      editingId = id;
-      const res = await fetch(`${api}/${id}`);
-      const card = await res.json();
-      const editDiv = document.getElementById('page-edit');
-      editDiv.innerHTML = `
-        <h2>Редагувати картку</h2>
-        <form id="editForm">
-          <input type="text" id="editQ" value="${card.question || ''}" required />
-          <input type="text" id="editA" value="${card.answer || ''}" required />
-          <button type="submit">Зберегти</button>
-          <button type="button" onclick="showPage('list')">Скасувати</button>
-        </form>
-      `;
-      showPage('edit');
-      document.getElementById('editForm').onsubmit = async e => {
-        e.preventDefault();
-        const question = document.getElementById('editQ').value.trim();
-        const answer = document.getElementById('editA').value.trim();
-        if (!question || !answer) return;
-        await fetch(`${api}/${editingId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ question, answer })
-        });
-        showPage('list');
-      };
-    };
-
-    // Початковий показ сторінки
-    showPage('list');
-  </script>
+  <script type="module" src="src/main.js"></script>
 </body>
 </html>
