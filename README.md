@@ -1,6 +1,6 @@
 [![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/Om1zqYVh)
 
-# Генератор Флешкарток (оновлено)
+# Генератор Флешкарток
 
 ## Опис
 Сучасний генератор флешкарток із підтримкою тем, імпорту, тестування, пошуку, CRUD, профілю користувача. Весь функціонал працює через GraphQL endpoint (ApolloServer на Netlify Functions). Прямий доступ до БД і REST-запити не використовуються.
